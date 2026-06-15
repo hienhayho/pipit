@@ -2,11 +2,11 @@ import SwiftUI
 import ScreenCaptureKit
 
 struct ContentView: View {
-    @StateObject private var sessionManager = SessionManager()
+    @ObservedObject var sessionManager: SessionManager
     @State private var regionSelectorController: RegionSelectorWindowController?
     @State private var selectedWindowID: CGWindowID?
     @State private var captureMode: CaptureMode = .window
-    @State private var showingPermissionAlert = false
+    @State private var windowSearch = ""
 
     enum CaptureMode: String, CaseIterable {
         case window = "Window"
@@ -30,6 +30,10 @@ struct ContentView: View {
             }
 
             Divider()
+
+            if !sessionManager.permissionGranted {
+                permissionBanner
+            }
 
             // Mode picker
             Picker("Mode", selection: $captureMode) {
@@ -77,19 +81,42 @@ struct ContentView: View {
             .foregroundColor(.secondary)
         }
         .padding(20)
-        .frame(width: 320)
+        .frame(width: 340, alignment: .top)
+        .frame(maxHeight: .infinity, alignment: .top)
         .task {
-            await checkPermission()
-            sessionManager.refresh()
+            sessionManager.refresh() // triggers SCK permission prompt natively if not granted
         }
-        .alert("Screen Recording Permission Required", isPresented: $showingPermissionAlert) {
-            Button("Open System Settings") {
-                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+    }
+
+    private var permissionBanner: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield")
+                    .foregroundColor(.orange)
+                Text("Screen recording permission required")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.orange)
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Pipit needs screen recording permission to capture windows and regions.")
+            HStack(spacing: 8) {
+                Button("Open Settings") {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .controlSize(.small)
+
+                Button("Re-check") {
+                    sessionManager.refresh()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
         }
+        .padding(10)
+        .background(Color.orange.opacity(0.1))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.3), lineWidth: 1))
+        .cornerRadius(8)
     }
 
     private var windowPickerSection: some View {
@@ -104,23 +131,40 @@ struct ContentView: View {
                     .foregroundColor(.secondary)
                     .padding(.vertical, 4)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 2) {
-                        ForEach(sessionManager.availableWindows, id: \.windowID) { window in
-                            WindowRowView(
-                                window: window,
-                                isSelected: window.windowID == selectedWindowID
-                            )
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                selectedWindowID = window.windowID
+                TextField("Search windows...", text: $windowSearch)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.caption)
+
+                let filtered = sessionManager.availableWindows.filter {
+                    windowSearch.isEmpty ||
+                    ($0.title ?? "").localizedCaseInsensitiveContains(windowSearch) ||
+                    ($0.owningApplication?.applicationName ?? "").localizedCaseInsensitiveContains(windowSearch)
+                }
+
+                if filtered.isEmpty {
+                    Text("No results for \"\(windowSearch)\"")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 2) {
+                            ForEach(filtered, id: \.windowID) { window in
+                                WindowRowView(
+                                    window: window,
+                                    isSelected: window.windowID == selectedWindowID
+                                )
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedWindowID = window.windowID
+                                }
                             }
                         }
                     }
+                    .frame(maxHeight: 280)
+                    .background(Color(NSColor.controlBackgroundColor))
+                    .cornerRadius(8)
                 }
-                .frame(maxHeight: 200)
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
             }
         }
     }
@@ -136,14 +180,6 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
-        }
-    }
-
-    private func checkPermission() async {
-        do {
-            try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        } catch {
-            showingPermissionAlert = true
         }
     }
 
@@ -258,5 +294,5 @@ struct WindowRowView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(sessionManager: SessionManager())
 }

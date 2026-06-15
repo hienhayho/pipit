@@ -45,9 +45,9 @@ class PiPSession: ObservableObject, Identifiable {
 @MainActor
 class SessionManager: ObservableObject {
     @Published var sessions: [PiPSession] = []
-    // Shared window list for the picker — refreshed once, used by all new sessions
     @Published var availableWindows: [SCWindow] = []
     @Published var availableDisplays: [SCDisplay] = []
+    @Published var permissionGranted: Bool = true
 
     func refresh() {
         Task {
@@ -55,7 +55,10 @@ class SessionManager: ObservableObject {
                 let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
                 availableWindows = content.windows.filter { $0.title != nil && !$0.title!.isEmpty }
                 availableDisplays = content.displays
+                permissionGranted = true
             } catch {
+                let code = (error as NSError).code
+                if code == -3801 { permissionGranted = false }
                 print("Refresh failed: \(error)")
             }
         }

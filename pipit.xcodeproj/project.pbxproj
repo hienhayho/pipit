@@ -397,8 +397,10 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"pipit/Preview Content\"";
+				DEVELOPMENT_TEAM = Q3VKAGJ32H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "Pipit needs screen recording permission to capture windows and regions for Picture in Picture.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -423,8 +425,10 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"pipit/Preview Content\"";
+				DEVELOPMENT_TEAM = Q3VKAGJ32H;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "Pipit needs screen recording permission to capture windows and regions for Picture in Picture.";
 				LD_RUNPATH_SEARCH_PATHS = (
