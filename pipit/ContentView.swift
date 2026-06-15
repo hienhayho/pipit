@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var selectedWindowID: CGWindowID?
     @State private var captureMode: CaptureMode = .window
     @State private var windowSearch = ""
+    @AppStorage("hoverTransparencyEnabled") private var hoverTransparencyEnabled = true
 
     enum CaptureMode: String, CaseIterable {
         case window = "Window"
@@ -73,12 +74,40 @@ struct ContentView: View {
                 }
             }
 
-            Button(action: sessionManager.refresh) {
-                Label("Refresh", systemImage: "arrow.clockwise")
+            Divider()
+
+            // Settings
+            HStack {
+                Image(systemName: "gearshape")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("Settings")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
-            .buttonStyle(.plain)
-            .font(.caption)
-            .foregroundColor(.secondary)
+
+            Toggle("Transparent on hover", isOn: $hoverTransparencyEnabled)
+                .font(.caption)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+
+            Divider()
+
+            HStack {
+                Button(action: sessionManager.refresh) {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.plain)
+                .font(.caption)
+                .foregroundColor(.secondary)
+
+                Spacer()
+
+                Button("Quit") { NSApp.terminate(nil) }
+                    .buttonStyle(.plain)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding(20)
         .frame(width: 340, alignment: .top)

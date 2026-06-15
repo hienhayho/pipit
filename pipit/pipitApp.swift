@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var sessionManager: SessionManager!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        UserDefaults.standard.register(defaults: ["hoverTransparencyEnabled": true])
         sessionManager = SessionManager()
         NSApp.setActivationPolicy(.accessory) // no dock icon
 
